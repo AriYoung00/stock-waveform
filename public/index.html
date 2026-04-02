@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Stock Waveform</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <h1>Stock Waveform</h1>
+  <p class="subtitle">Load a stock. Play its price history as a waveform.</p>
+
+  <div class="stock-loader">
+    <input type="text" id="ticker" placeholder="Ticker (e.g. AAPL)" spellcheck="false">
+    <select id="range">
+      <option value="1mo">1 Month</option>
+      <option value="3mo">3 Months</option>
+      <option value="6mo">6 Months</option>
+      <option value="1y" selected>1 Year</option>
+      <option value="2y">2 Years</option>
+      <option value="5y">5 Years</option>
+    </select>
+    <button id="load-btn">Load</button>
+  </div>
+
+  <div id="status" class="status">Enter a ticker and click Load</div>
+
+  <canvas id="waveform" width="800" height="200"></canvas>
+
+  <div class="params">
+    <h2>Synth Parameters</h2>
+    <div class="param-grid">
+      <label>
+        Attack <span class="range-hint">(0.001 – 2.0 s)</span>
+        <input type="text" class="param-input" data-param="attack" value="0.01">
+      </label>
+      <label>
+        Decay <span class="range-hint">(0.001 – 2.0 s)</span>
+        <input type="text" class="param-input" data-param="decay" value="0.1">
+      </label>
+      <label>
+        Sustain <span class="range-hint">(0.0 – 1.0)</span>
+        <input type="text" class="param-input" data-param="sustain" value="0.7">
+      </label>
+      <label>
+        Release <span class="range-hint">(0.001 – 5.0 s)</span>
+        <input type="text" class="param-input" data-param="release" value="0.3">
+      </label>
+      <label>
+        Gain <span class="range-hint">(0.0 – 1.0)</span>
+        <input type="text" class="param-input" data-param="gain" value="0.5">
+      </label>
+    </div>
+  </div>
+
+  <div class="keyboard-guide">
+    <h2>Keyboard</h2>
+    <pre>
+Lower octave          Upper octave
+│ S│ D│   │ G│ H│ J│  │ 2│ 3│   │ 5│ 6│ 7│
+│C#│D#│   │F#│G#│A#│  │C#│D#│   │F#│G#│A#│
+├──┴┬─┴┬──┼─┴┬─┴┬─┘  ├──┴┬─┴┬──┼─┴┬─┴┬─┘
+│ Z │ X│ C│ V│ B│ N│M │ Q │ W│ E│ R│ T│ Y│U
+│ C │ D│ E│ F│ G│ A│B │ C │ D│ E│ F│ G│ A│B
+└───┴──┴──┴──┴──┴──┘  └───┴──┴──┴──┴──┴──┘
+  C3 — B3               C4 — B4</pre>
+    <p>Click outside text inputs first, then play with your keyboard.</p>
+  </div>
+
+  <script src="synth.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,11 @@
+{
+  "name": "stock-waveform",
+  "version": "1.0.0",
+  "description": "Wavetable synthesizer using stock price data as waveforms",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4"
+  }
+}
