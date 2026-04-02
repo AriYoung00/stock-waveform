@@ -10,7 +10,7 @@
   <h1>Stock Waveform</h1>
   <p class="subtitle">Load a stock. Play its price history as a waveform.</p>
 
-  <div class="stock-loader">
+  <div class="stock-loader" id="api-loader">
     <input type="text" id="ticker" placeholder="Ticker (e.g. AAPL)" spellcheck="false">
     <select id="range">
       <option value="1mo">1 Month</option>
@@ -23,7 +23,12 @@
     <button id="load-btn">Load</button>
   </div>
 
-  <div id="status" class="status">Enter a ticker and click Load</div>
+  <div class="csv-loader">
+    <span class="csv-label">or load from CSV:</span>
+    <input type="file" id="csv-file" accept=".csv">
+  </div>
+
+  <div id="status" class="status">Enter a ticker or load a CSV</div>
 
   <canvas id="waveform" width="800" height="200"></canvas>
 
