@@ -1,53 +1,9 @@
-const vm = require('vm');
 const fs = require('fs');
 const path = require('path');
+const { loadAppFunctions, loadWavetableProcessor } = require('./helpers');
 
 const CSV_PATH = path.join(__dirname, '..', 'stock.csv');
 const csvExists = fs.existsSync(CSV_PATH);
-
-// Load normalize and parseCSV from app.js via sandboxed context
-function loadAppFunctions() {
-  const code = fs.readFileSync(path.join(__dirname, '..', 'docs', 'app.js'), 'utf-8');
-
-  const mockElement = {
-    addEventListener: () => {},
-    value: '',
-    files: [],
-    textContent: '',
-    dataset: {},
-    getContext: () => ({
-      fillStyle: '', strokeStyle: '', lineWidth: 0, font: '', textAlign: '',
-      fillRect: () => {}, beginPath: () => {}, moveTo: () => {}, lineTo: () => {},
-      stroke: () => {}, fillText: () => {},
-    }),
-    width: 800,
-    height: 200,
-  };
-
-  const context = {
-    StockSynth: class { init() {} setWavetable() {} setParam() {} playNote() {} stopNote() {} },
-    document: {
-      getElementById: () => mockElement,
-      addEventListener: () => {},
-      querySelectorAll: () => [],
-    },
-    window: {},
-    Set: Set,
-    Float32Array: Float32Array,
-    Math: Math,
-    console: console,
-    isNaN: isNaN,
-    parseFloat: parseFloat,
-  };
-
-  vm.createContext(context);
-  vm.runInContext(code, context);
-
-  return {
-    normalize: context.normalize,
-    parseCSV: context.parseCSV,
-  };
-}
 
 const conditionalDescribe = csvExists ? describe : describe.skip;
 
@@ -111,25 +67,7 @@ conditionalDescribe('Integration: stock.csv end-to-end pipeline', () => {
   });
 
   it('full pipeline: CSV -> parse -> normalize -> wavetable processor', () => {
-    // Load the wavetable processor
-    const processorCode = fs.readFileSync(
-      path.join(__dirname, '..', 'docs', 'worklet', 'wavetable-processor.js'),
-      'utf-8'
-    );
-    let ProcessorClass;
-    const procContext = {
-      AudioWorkletProcessor: class {
-        constructor() { this.port = { onmessage: null }; }
-      },
-      registerProcessor: (_, cls) => { ProcessorClass = cls; },
-      sampleRate: 44100,
-      Float32Array: Float32Array,
-      Math: Math,
-    };
-    vm.createContext(procContext);
-    vm.runInContext(processorCode, procContext);
-
-    // Run the full pipeline
+    const ProcessorClass = loadWavetableProcessor();
     const closes = parseCSV(csvText);
     const normalized = normalize(closes);
 

@@ -1,30 +1,6 @@
-const vm = require('vm');
-const fs = require('fs');
-const path = require('path');
+const { loadWavetableProcessor } = require('./helpers');
 
-function loadProcessor() {
-  const code = fs.readFileSync(
-    path.join(__dirname, '..', 'docs', 'worklet', 'wavetable-processor.js'),
-    'utf-8'
-  );
-
-  let registeredClass;
-  const context = {
-    AudioWorkletProcessor: class {
-      constructor() { this.port = { onmessage: null }; }
-    },
-    registerProcessor: (name, cls) => { registeredClass = cls; },
-    sampleRate: 44100,
-    Float32Array: Float32Array,
-    Math: Math,
-  };
-
-  vm.createContext(context);
-  vm.runInContext(code, context);
-  return registeredClass;
-}
-
-const WavetableProcessor = loadProcessor();
+const WavetableProcessor = loadWavetableProcessor();
 
 describe('WavetableProcessor', () => {
   let processor;

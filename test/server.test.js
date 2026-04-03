@@ -122,6 +122,29 @@ describe('GET /api/stock/:ticker', () => {
     expect(calledUrl).toContain('range=5y');
   });
 
+  it('safely encodes special characters in ticker', async () => {
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        chart: {
+          result: [{
+            meta: { symbol: 'X' },
+            timestamp: [1700000000],
+            indicators: { quote: [{ close: [10] }] },
+          }],
+        },
+      }),
+    });
+
+    // Ticker with characters that need URI encoding
+    await request(app).get('/api/stock/' + encodeURIComponent('<script>alert(1)</script>'));
+
+    const calledUrl = global.fetch.mock.calls[0][0];
+    // The ticker should be URI-encoded in the outbound URL, not passed raw
+    expect(calledUrl).not.toContain('<script>');
+    expect(calledUrl).toContain(encodeURIComponent('<script>alert(1)</script>'));
+  });
+
   it('defaults range to 1y when not specified', async () => {
     global.fetch = jest.fn().mockResolvedValue({
       ok: true,
