@@ -46,6 +46,10 @@ app.get('/api/stock/:ticker', async (req, res) => {
   }
 });
 
-app.listen(PORT, () => {
-  console.log(`Stock Waveform running at http://localhost:${PORT}`);
-});
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`Stock Waveform running at http://localhost:${PORT}`);
+  });
+}
+
+module.exports = app;
