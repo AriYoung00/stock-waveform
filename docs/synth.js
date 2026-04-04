@@ -82,12 +82,11 @@ class StockSynth {
     env.gain.setValueAtTime(env.gain.value, now);
     env.gain.linearRampToValueAtTime(0, now + this.release);
 
+    // Disconnect after release envelope completes to prevent node accumulation
     setTimeout(() => {
-      try {
-        worklet.disconnect();
-        env.disconnect();
-      } catch (_) {}
-    }, (this.release + 0.1) * 1000);
+      worklet.disconnect();
+      env.disconnect();
+    }, (this.release + 0.05) * 1000);
   }
 }
 
