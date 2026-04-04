@@ -12,6 +12,8 @@ const KEY_MAP = {
 
 const synth = new StockSynth();
 let wavetableLoaded = false;
+let csvData = null; // { dates: string[], closes: number[], label: string } when CSV loaded
+let csvLabel = '';
 
 // --- DOM refs ---
 const tickerInput   = document.getElementById('ticker');
@@ -78,6 +80,44 @@ async function loadStock() {
   }
 }
 
+// --- Range filtering for CSV data ---
+const RANGE_MONTHS = { '1mo': 1, '3mo': 3, '6mo': 6, '1y': 12, '2y': 24, '5y': 60 };
+
+function filterByRange(dates, closes, rangeValue) {
+  if (dates.length === 0 || !dates[0]) return closes;
+
+  const lastDate = new Date(dates[dates.length - 1]);
+  const months = RANGE_MONTHS[rangeValue];
+  if (!months) return closes;
+
+  const cutoff = new Date(lastDate);
+  cutoff.setMonth(cutoff.getMonth() - months + 1);
+  cutoff.setDate(1); // first day of the month to include
+
+  let startIdx = 0;
+  for (let i = 0; i < dates.length; i++) {
+    if (new Date(dates[i]) >= cutoff) {
+      startIdx = i;
+      break;
+    }
+  }
+  return closes.slice(startIdx);
+}
+
+async function applyCSVRange() {
+  if (!csvData) return;
+  const closes = filterByRange(csvData.dates, csvData.closes, rangeSelect.value);
+  if (closes.length < 2) {
+    statusEl.textContent = 'Not enough data for selected range';
+    return;
+  }
+  await applyWaveform(closes, csvLabel);
+}
+
+rangeSelect.addEventListener('change', () => {
+  if (csvData) applyCSVRange();
+});
+
 // --- CSV file loading ---
 csvFileInput.addEventListener('change', loadCSV);
 
@@ -89,11 +129,13 @@ async function loadCSV() {
 
   try {
     const text = await file.text();
-    const closes = parseCSV(text);
+    const { dates, closes } = parseCSV(text);
     if (closes.length < 2) {
       throw new Error('CSV must contain at least 2 numeric price values');
     }
-    await applyWaveform(closes, file.name.replace(/\.csv$/i, ''));
+    csvData = { dates, closes };
+    csvLabel = file.name.replace(/\.csv$/i, '');
+    await applyCSVRange();
   } catch (err) {
     statusEl.textContent = `CSV error: ${err.message}`;
   }
@@ -101,22 +143,27 @@ async function loadCSV() {
 
 function parseCSV(text) {
   const lines = text.trim().split(/\r?\n/);
-  if (lines.length === 0) return [];
+  if (lines.length === 0) return { dates: [], closes: [] };
 
-  // Detect header row and find the "Close" column
+  // Detect header row and find the "Close" and "Date" columns
   const header = lines[0].split(',').map(h => h.trim().toLowerCase().replace(/"/g, ''));
   let closeCol = header.indexOf('close');
   if (closeCol === -1) closeCol = header.indexOf('adj close');
+  const dateCol = header.indexOf('date');
 
   // If we found a close column, parse as columnar CSV
   if (closeCol !== -1) {
     const closes = [];
+    const dates = [];
     for (let i = 1; i < lines.length; i++) {
       const cols = lines[i].split(',');
       const val = parseFloat(cols[closeCol]);
-      if (!isNaN(val)) closes.push(val);
+      if (!isNaN(val)) {
+        closes.push(val);
+        dates.push(dateCol !== -1 ? cols[dateCol].trim().replace(/"/g, '') : null);
+      }
     }
-    return closes;
+    return { dates, closes };
   }
 
   // Otherwise, try to parse as one number per line (or single-column CSV)
@@ -127,7 +174,7 @@ function parseCSV(text) {
     const val = parseFloat(lines[i].split(',')[0]);
     if (!isNaN(val)) closes.push(val);
   }
-  return closes;
+  return { dates: [], closes };
 }
 
 // --- Draw waveform on canvas ---

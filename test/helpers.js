@@ -42,14 +42,15 @@ function loadAppFunctions() {
     console: console,
     isNaN: isNaN,
     parseFloat: parseFloat,
+    Date: Date,
   };
 
   vm.createContext(context);
   vm.runInContext(code, context);
 
-  if (typeof context.normalize !== 'function' || typeof context.parseCSV !== 'function') {
+  if (typeof context.normalize !== 'function' || typeof context.parseCSV !== 'function' || typeof context.filterByRange !== 'function') {
     throw new Error(
-      'Failed to load normalize/parseCSV from app.js — the file likely uses a global ' +
+      'Failed to load functions from app.js — the file likely uses a global ' +
       'not present in the test vm context. Check test/helpers.js.'
     );
   }
@@ -57,6 +58,7 @@ function loadAppFunctions() {
   return {
     normalize: context.normalize,
     parseCSV: context.parseCSV,
+    filterByRange: context.filterByRange,
   };
 }
 
